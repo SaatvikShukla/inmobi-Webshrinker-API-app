@@ -8,7 +8,7 @@ const morgan = require('morgan');
 let app = express();
 
 // Import routes
-let apiRoutes = require("./api-routes");
+let apiRoutes = require("./api/routes/api-routes");
 
 // Configure bodyparser to handle post requests
 app.use(bodyParser.urlencoded({
@@ -22,6 +22,17 @@ app.use(morgan('dev'));
 // Connect to Mongoose and set connection variable
 mongoose.connect('mongodb+srv://inmobi:' + 'h911bqe2BvfrwLXM' + '@webshrinkerapi-app-cluster-jatze.mongodb.net/test?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true })
 var db = mongoose.connection;
+
+//cors headers 
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-type, Accept, Authorization");
+    if (req.method === 'OPTIONS'){
+        res.header("Access-Control-Allow-Headers", "PUT, POST, PATCH, DELETE, GET");
+        res.status(200).json({});
+    }
+    next();
+});
 
 // Added check for DB connection
 if(!db)
@@ -37,6 +48,8 @@ app.get('/', (req, res) => res.send('WebshrinkerAPI-App is online'));
 
 // Use Api routes in the App
 app.use('/api', apiRoutes);
+
+
 // Launch app to listen to specified port
 app.listen(port, function () {
     console.log("Running on port " + port + "\n");
