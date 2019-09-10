@@ -1,4 +1,5 @@
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 var shell = require('shelljs');
 let mongoose = require('mongoose');
@@ -11,6 +12,7 @@ const axios = require('axios');
 
 const Router = express.Router;
 const csvFile = require('./api/model/csvModel');
+const webShrinkerData = require('./api/model/webShrinkerModel') 
 
 const upload = multer({ dest: './tmp/csv/' });
 const app = express();
@@ -23,8 +25,8 @@ const port = 9000;
 app.use(morgan('dev'));
 
 // Connect to Mongoose and set connection variable
-// mongoose.connect('mongodb+srv://inmobi:' + 'h911bqe2BvfrwLXM' + '@webshrinkerapi-app-cluster-jatze.mongodb.net/test?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true })
-// var db = mongoose.connection;
+mongoose.connect('mongodb+srv://inmobi:' + 'h911bqe2BvfrwLXM' + '@webshrinkerapi-app-cluster-jatze.mongodb.net/test?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true })
+var db = mongoose.connection;
 
 //cors headers 
 app.use((req, res, next) => {
@@ -51,31 +53,38 @@ router.post('/', upload.single('csvFile'), function (req, res) {
       let URL = csvRow[0].toString();
     });
 
-      key="DDL9l5B3pTtQMsGOaPVB"
-      secret="bhvQhfbvorx2LlkSGlz7"
-      // console.log(shell.);
-      const { stdout, stderr, code } = shell.exec('bash auth.sh', { silent: true });
-      targetURL = ((stdout.toString()).trim());
-      console.log(targetURL);
-      axios.get(targetURL)
-        .then(response => {
-          // res.send(response.toString());//status(200).json(response);
-          console.log(response.data)
-          // console.log(response.status)
-          // console.log(response.statusText)
-          // console.log(response.headers)
-          // console.log(response.config)
-          // console.log(response.request)
+    key="DDL9l5B3pTtQMsGOaPVB"
+    secret="bhvQhfbvorx2LlkSGlz7"
+    const { stdout, stderr, code } = shell.exec('bash auth.sh', { silent: true });
 
-        })
-        .catch(error => {
-          console.log(error);
-        });
-      
-      
-    // res.status(200).json({});
-      
+    targetURL = ((stdout.toString()).trim());
+    console.log(targetURL);
+    const request = require('request');
+
+    request(targetURL, { json: true }, (err, res, body) => {
+      if (err) { return console.log(err); }
+      updateDb("1", "www.google.com", JSON.stringify(res))
+    });    
 });
+
+
+function updateDb(vid, url, data){
+  const payload = new webShrinkerData({
+    viedId: vid,
+    url: url,
+    responseFromWS: data 
+  });
+  payload
+      .save()
+      .then(result => {
+          console.log(result);
+          console.log("Successfully stored to db")
+      })
+      .catch(err => {
+          console.log(err);
+      });
+
+}
 
 app.use('/upload-csv', router);
 
