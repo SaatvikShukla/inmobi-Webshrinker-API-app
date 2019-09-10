@@ -1,7 +1,7 @@
 const http = require('http');
 const fs = require('fs');
-
-// let mongoose = require('mongoose');
+var shell = require('shelljs');
+let mongoose = require('mongoose');
 const morgan = require('morgan');
 const express = require('express');
 const multer = require('multer');
@@ -49,52 +49,34 @@ router.post('/', upload.single('csvFile'), function (req, res) {
     .then((csvRow)=>{ 
       
       let URL = csvRow[0].toString();
-      // URL = URL.replace(/(^\w+:|^)\/\//, '');
-
-      console.log("URL IS " + URL);
-      // REQUEST=URL+"?key="+WS_ACCESS_KEY;
-      // HASH= WS_SECRET_KEY + ":" + REQUEST;
-
-
-    //   axios.get('https://api.webshrinker.com/categories/v3/'+URL, {}, {
-    //     auth: {
-    //       username: 'DDL9l5B3pTtQMsGOaPVB',
-    //       password: 'bhvQhfbvorx2LlkSGlz7'
-    //     }
-    //   })
-      
-    //     .then(response => {
-    //       console.log(response.data.url);
-    //       console.log(response.data.explanation);
-    //     })
-    //     .catch(error => {
-    //       console.log(error.response);
-    //     });
-    //     // console.log(csvRow) // => [["1","2","3"], ["4","5","6"], ["7","8","9"]]
-    // })
     });
 
-    //push webshrunker data to webshrunkermodel
+      key="DDL9l5B3pTtQMsGOaPVB"
+      secret="bhvQhfbvorx2LlkSGlz7"
+      // console.log(shell.);
+      const { stdout, stderr, code } = shell.exec('bash auth.sh', { silent: true });
+      targetURL = ((stdout.toString()).trim());
+      console.log(targetURL);
+      axios.get(targetURL)
+        .then(response => {
+          // res.send(response.toString());//status(200).json(response);
+          console.log(response.data)
+          // console.log(response.status)
+          // console.log(response.statusText)
+          // console.log(response.headers)
+          // console.log(response.config)
+          // console.log(response.request)
 
-    
-    res.status(200).json({});
+        })
+        .catch(error => {
+          console.log(error);
+        });
+      
+      
+    // res.status(200).json({});
       
 });
 
-// router.get('/filestatus', (req, res, next) => {
-//   csvFile.find()
-//       .exec()
-//       .then(docs => {
-//           console.log(docs);
-//           res.status(200).json(docs);
-//       })
-//       .catch(err => {
-//           console.log(err);
-//           res.status(500).json({
-//               error: err
-//           });
-//       });
-// })
 app.use('/upload-csv', router);
 
 function startServer() {
