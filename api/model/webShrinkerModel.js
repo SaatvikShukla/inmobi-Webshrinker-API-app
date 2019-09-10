@@ -4,13 +4,10 @@ var mongoose = require('mongoose');
 var webShrinkerModel = mongoose.Schema({
     viedId : { 
         type : String,
-        required : true
+        required : true,
+        default : 0
     },
-    url: {
-        type: String,
-        required: true
-    },
-    responseFromWS: {
+    domains: {
         type: String,
         required: true
     }

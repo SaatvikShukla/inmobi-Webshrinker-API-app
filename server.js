@@ -7,8 +7,9 @@ const morgan = require('morgan');
 const express = require('express');
 const multer = require('multer');
 const csv=require('csvtojson')
-
 const axios = require('axios');
+const request = require('request');
+var uuidv4 = require('uuid/v4');
 
 const Router = express.Router;
 const csvFile = require('./api/model/csvModel');
@@ -42,49 +43,80 @@ app.use((req, res, next) => {
 router.post('/', upload.single('csvFile'), function (req, res) {
     const fileRows = [];
     const csvFilePath=req.file.path;
-    console.log(csvFilePath);
-    csv({
-        noheader:true,
-        output: "csv"
-    })
-    .fromFile(csvFilePath)
-    .then((csvRow)=>{ 
-      
-      let URL = csvRow[0].toString();
-    });
 
-    key="DDL9l5B3pTtQMsGOaPVB"
-    secret="bhvQhfbvorx2LlkSGlz7"
-    const { stdout, stderr, code } = shell.exec('bash auth.sh', { silent: true });
+    if(csvFilePath){
+      console.log(csvFilePath);
+      csv({
+          noheader:true,
+          output: "csv"
+      })
+      .fromFile(csvFilePath)
+      .then((csvRow)=>{ 
+        let id = uuidv4();
+        let tempArr = {
+          "domain" : []
+        }
 
-    targetURL = ((stdout.toString()).trim());
-    console.log(targetURL);
-    const request = require('request');
+        for(i= 0; i< csvRow.length; i++){
+          let URL = csvRow[i].toString();
+          // let dbActionSuccess = 0;
+          const { stdout, stderr, code } = shell.exec('bash auth.sh '+URL, { silent: true });
+          targetURL = ((stdout.toString()).trim());
+          console.log(targetURL);
+          // tempArr.id = "1";
+          tempArr.domain.push({
+            "url" : URL,
+            "targetURL" : targetURL
+          })
+        }
 
-    request(targetURL, { json: true }, (err, res, body) => {
-      if (err) { return console.log(err); }
-      updateDb("1", "www.google.com", JSON.stringify(res))
-    });    
+        let dbActionResult = updateDb(id, tempArr);
+        if (dbActionResult == 1) {
+          res.send("done");
+        } else {
+          res.send("Failed");
+        }
+      });  
+    }        
 });
 
 
-function updateDb(vid, url, data){
+function updateDb(vid, datasetforViewId){
   const payload = new webShrinkerData({
     viedId: vid,
-    url: url,
-    responseFromWS: data 
+    domains: JSON.stringify(datasetforViewId.domain)
   });
   payload
       .save()
       .then(result => {
           console.log(result);
           console.log("Successfully stored to db")
+          return 1;
       })
       .catch(err => {
           console.log(err);
+          return 0;
       });
 
 }
+
+router.get('/files', function (req, res) {
+
+  webShrinkerData.find()
+  .exec()
+  .then(docs => {
+      console.log(docs);
+      res.status(200).json(docs);
+  })
+  .catch(err => {
+      console.log(err);
+      res.status(500).json({
+          error: err
+      });
+  });
+});
+
+
 
 app.use('/upload-csv', router);
 
