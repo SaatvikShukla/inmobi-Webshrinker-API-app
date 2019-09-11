@@ -1,5 +1,5 @@
-WS_ACCESS_KEY="DDL9l5B3pTtQMsGOaPVB"
-WS_SECRET_KEY="bhvQhfbvorx2LlkSGlz7"
+WS_ACCESS_KEY="SqugjXZXs9UcTHgOHWMO"
+WS_SECRET_KEY="UQ3NyGLGFfkBGPw6FezF"
 
 URL=($(echo -n "$1" | base64))
 
