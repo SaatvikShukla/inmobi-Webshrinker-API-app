@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 
 // Setup schema
 var webShrinkerModel = mongoose.Schema({
+    _id : mongoose.Types.ObjectId,
     viedId : { 
         type : String,
         required : true,
@@ -11,6 +12,7 @@ var webShrinkerModel = mongoose.Schema({
         type: String,
         required: true
     }
+    
 });
 // Export Contact model
 var webShrinkerModel = module.exports = mongoose.model('webShrinkerData', webShrinkerModel);

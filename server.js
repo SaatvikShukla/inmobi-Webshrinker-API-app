@@ -33,10 +33,10 @@ var db = mongoose.connection;
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-type, Accept, Authorization");
-  if (req.method === 'OPTIONS'){
-      res.header("Access-Control-Allow-Headers", "PUT, POST, PATCH, DELETE, GET");
-      res.status(200).json({});
-  }
+  // if (req.method === 'OPTIONS'){
+  //     res.header("Access-Control-Allow-Headers", "PUT, POST, PATCH, DELETE, GET");
+  //     res.status(200).json({});
+  // }
   next();
 });
 
@@ -45,7 +45,7 @@ router.post('/', upload.single('csvFile'), function (req, res) {
     const csvFilePath=req.file.path;
 
     if(csvFilePath){
-      console.log(csvFilePath);
+      // console.log(csvFilePath);
       csv({
           noheader:true,
           output: "csv"
@@ -53,7 +53,7 @@ router.post('/', upload.single('csvFile'), function (req, res) {
       .fromFile(csvFilePath)
       .then((csvRow)=>{ 
         let id = uuidv4();
-        let tempArr = {
+        let totalData = {
           "domain" : []
         }
 
@@ -62,34 +62,41 @@ router.post('/', upload.single('csvFile'), function (req, res) {
           // let dbActionSuccess = 0;
           const { stdout, stderr, code } = shell.exec('bash auth.sh '+URL, { silent: true });
           targetURL = ((stdout.toString()).trim());
-          console.log(targetURL);
+          // console.log(targetURL);
           // tempArr.id = "1";
-          tempArr.domain.push({
+          child = {
             "url" : URL,
             "targetURL" : targetURL
-          })
+          };
+          totalData.domain.push(child)
         }
 
-        let dbActionResult = updateDb(id, tempArr);
-        if (dbActionResult == 1) {
-          res.send("done");
-        } else {
-          res.send("Failed");
-        }
-      });  
+        let dbActionResult = updateDb(id, totalData);
+        // if (dbActionResult == 1) {
+          // res.send("done");
+        // } else {
+          // res.send("Failed");
+        // }
+      });
+      res.send("Done");
     }        
 });
 
 
 function updateDb(vid, datasetforViewId){
+  // console.log("Total data passed is of type "+ typeof datasetforViewId)
+  // console.log(datasetforViewId)
   const payload = new webShrinkerData({
+    _id: new mongoose.Types.ObjectId(),
     viedId: vid,
     domains: JSON.stringify(datasetforViewId.domain)
   });
+  // console.log(JSON.parse(payload.domains))
+  // console.log( typeof payload)
   payload
       .save()
       .then(result => {
-          console.log(result);
+          // console.log(datasetforViewId.domain);
           console.log("Successfully stored to db")
           return 1;
       })
@@ -105,7 +112,9 @@ router.get('/files', function (req, res) {
   webShrinkerData.find()
   .exec()
   .then(docs => {
-      console.log(docs);
+      // console.log(docs);
+      // console.log(typeof (docs));
+
       res.status(200).json(docs);
   })
   .catch(err => {
@@ -116,7 +125,20 @@ router.get('/files', function (req, res) {
   });
 });
 
-
+router.get('/files/:viewId', function (req, res) {
+  const id = req.params.viewId;
+  webShrinkerData.findById( id )
+  .exec()
+  .then(docs => {
+      res.status(200).json(docs);
+  })
+  .catch(err => {
+      console.log(err);
+      res.status(500).json({
+          error: err
+      });
+  });
+});
 
 app.use('/upload-csv', router);
 
