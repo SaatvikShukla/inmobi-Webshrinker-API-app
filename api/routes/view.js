@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const mongoogse = require('mongoose');
+const mongoose = require('mongoose');
 const webShrinkerData = require("../models/webShrinkerModel") 
+const preCacheModel = require("../models/preCacheModel") 
 
 router.get('/', (req, res, next) => {
     console.log("working on get on /view")
@@ -36,6 +37,30 @@ router.get('/:id', function (req, res) {
             error: err
         });
     });
-  });
+});
+
+router.get('/:id/:url', function (req, res) {
+    const id = req.params.id;
+    let url = req.params.url;
+    url = (decodeURIComponent(url))
+
+    preCacheModel.find( { "url" : { $eq : url } } )
+    .exec()
+    .then(docs => {
+        if(!docs || docs.length<1){
+            console.log("url doesnt exist in preCache db, generating the values")
+
+        } else {
+            res.status(200).json(docs);
+        }
+    })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json({
+            error: err
+        });
+    });
+
+});
 
 module.exports = router;

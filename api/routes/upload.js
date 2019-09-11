@@ -7,6 +7,7 @@ const upload = multer();
 const shell = require('shelljs')
 
 const webShrinkerData = require("../models/webShrinkerModel") 
+const preCacheModel = require("../models/preCacheModel") 
 
 router.post('/',upload.single('uploadCsv'), function(req, res, next) {
     let originalname = req.file.originalname;
@@ -15,7 +16,7 @@ router.post('/',upload.single('uploadCsv'), function(req, res, next) {
     let csv=req.file.buffer.toString('utf8');
     csv = csv.split('\n')
     csv = csv.filter(Boolean)
-    console.log(csv)
+    // console.log(csv)
     let totalData = {
         "domains" : []
     }
@@ -64,8 +65,27 @@ function updateDb(originalname, totalData){
   
 }
 
-function preCache(totalData){
+async function preCache(totalData){
     console.log("precaching")
+
+    for(let i=0; i< totalData.domains.length; i++){
+        preCacheURLtoMongoDB((totalData.domains[i].url).trim(), totalData.domains[i].targetURL)
+    }
+}
+
+function preCacheURLtoMongoDB(url, targetURL){
+    const payload = new preCacheModel({
+        url: url,
+        targetURL: targetURL
+      });
+    
+      payload
+          .save()
+          .then(result => {})
+          .catch(err => {
+              console.log(err);
+              return 0;
+          });
 }
 
 module.exports = router;
