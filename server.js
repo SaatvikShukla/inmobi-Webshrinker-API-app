@@ -59,24 +59,19 @@ router.post('/', upload.single('csvFile'), function (req, res) {
 
         for(i= 0; i< csvRow.length; i++){
           let URL = csvRow[i].toString();
-          // let dbActionSuccess = 0;
-          const { stdout, stderr, code } = shell.exec('bash auth.sh '+URL, { silent: true });
-          targetURL = ((stdout.toString()).trim());
-          // console.log(targetURL);
-          // tempArr.id = "1";
-          child = {
-            "url" : URL,
-            "targetURL" : targetURL
-          };
-          totalData.domain.push(child)
-        }
+          if(URL.length>0){
+              const { stdout, stderr, code } = shell.exec('bash auth.sh '+URL, { silent: true });
+              targetURL = ((stdout.toString()).trim());
 
-        let dbActionResult = updateDb(id, totalData);
-        // if (dbActionResult == 1) {
-          // res.send("done");
-        // } else {
-          // res.send("Failed");
-        // }
+              child = {
+                "url" : URL,
+                "targetURL" : targetURL
+              };
+              totalData.domain.push(child)
+            }
+          }
+          let dbActionResult = updateDb(id, totalData);
+
       });
       res.send("Done");
     }        
@@ -84,19 +79,15 @@ router.post('/', upload.single('csvFile'), function (req, res) {
 
 
 function updateDb(vid, datasetforViewId){
-  // console.log("Total data passed is of type "+ typeof datasetforViewId)
-  // console.log(datasetforViewId)
   const payload = new webShrinkerData({
     _id: new mongoose.Types.ObjectId(),
     viedId: vid,
     domains: JSON.stringify(datasetforViewId.domain)
   });
-  // console.log(JSON.parse(payload.domains))
-  // console.log( typeof payload)
+
   payload
       .save()
       .then(result => {
-          // console.log(datasetforViewId.domain);
           console.log("Successfully stored to db")
           return 1;
       })
@@ -112,9 +103,6 @@ router.get('/files', function (req, res) {
   webShrinkerData.find()
   .exec()
   .then(docs => {
-      // console.log(docs);
-      // console.log(typeof (docs));
-
       res.status(200).json(docs);
   })
   .catch(err => {
@@ -130,7 +118,12 @@ router.get('/files/:viewId', function (req, res) {
   webShrinkerData.findById( id )
   .exec()
   .then(docs => {
-      res.status(200).json(docs);
+    console.log();
+
+      res.status(200).json({
+        message: 'Success',
+        domains: JSON.parse(docs.domains)
+    });
   })
   .catch(err => {
       console.log(err);
