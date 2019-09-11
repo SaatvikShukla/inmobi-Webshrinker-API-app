@@ -70,10 +70,11 @@ router.post('/', upload.single('csvFile'), function (req, res) {
               totalData.domain.push(child)
             }
           }
-          let dbActionResult = updateDb(id, totalData);
-
+          updateDb(id, totalData);
+          // console.log(dbActionResult);
       });
-      res.send("Done");
+      
+      res.send("Successfully stored to db");
     }        
 });
 
@@ -132,6 +133,7 @@ router.get('/files/:viewId', function (req, res) {
       });
   });
 });
+
 
 app.use('/upload-csv', router);
 
