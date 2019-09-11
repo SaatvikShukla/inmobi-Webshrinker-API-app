@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const webShrinkerData = require("../models/webShrinkerModel") 
 const preCacheModel = require("../models/preCacheModel") 
+const shell = require('shelljs')
 
 router.get('/', (req, res, next) => {
     console.log("working on get on /view")
@@ -50,6 +51,11 @@ router.get('/:id/:url', function (req, res) {
         if(!docs || docs.length<1){
             console.log("url doesnt exist in preCache db, generating the values")
 
+            const { stdout, stderr, code } = shell.exec('bash auth.sh '+url);
+            targetURL = ((stdout.toString()).trim());
+            preCacheURLtoMongoDB(url, targetURL)
+            res.status(200).json({"url": url, "targetURL": targetURL})
+
         } else {
             res.status(200).json(docs);
         }
@@ -62,5 +68,22 @@ router.get('/:id/:url', function (req, res) {
     });
 
 });
+
+
+function preCacheURLtoMongoDB(url, targetURL){
+    const payload = new preCacheModel({
+        url: url,
+        targetURL: targetURL
+      });
+    
+      payload
+          .save()
+          .then(result => {})
+          .catch(err => {
+              console.log(err);
+              return 0;
+          });
+}
+
 
 module.exports = router;
