@@ -33,15 +33,7 @@ app.use((req, res, next) => {
 // DB
 mongoose.connect('mongodb+srv://inmobi:' + 'h911bqe2BvfrwLXM' + '@webshrinkerapi-app-cluster-jatze.mongodb.net/test?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true })
 var db = mongoose.connection;
-//self bootstrap if need be
-db.collection("textstore", { }, function(err, coll) {
-    if (err != null) {
-        db.createCollection("textstore", function(err, result) {
-            assert.equal(null, err);
-            console.log("Textstore has been recreated.")
-        });
-    }
-});
+
 
 app.use('/upload', uploadRoute );
 
