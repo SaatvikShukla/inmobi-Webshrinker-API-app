@@ -32,7 +32,7 @@ router.post('/',upload.single('uploadCsv'), function(req, res, next) {
             totalData.domains.push(child)
         }
     }
-    // console.log(totalData)
+    preCache(totalData)
 
     if(!updateDb(originalname, totalData)){
         console.log("Added to db successfully")
@@ -62,6 +62,10 @@ function updateDb(originalname, totalData){
             return 0;
         });
   
+}
+
+function preCache(totalData){
+    console.log("precaching")
 }
 
 module.exports = router;

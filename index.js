@@ -36,6 +36,7 @@ var db = mongoose.connection;
 
 
 app.use('/upload', uploadRoute );
+app.use('/view', viewRoute );
 
 
 // Import routes
