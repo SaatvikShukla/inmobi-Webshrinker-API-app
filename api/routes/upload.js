@@ -65,7 +65,7 @@ function updateDb(originalname, totalData){
   
 }
 
-async function preCache(totalData){
+function preCache(totalData){
     console.log("precaching")
 
     for(let i=0; i< totalData.domains.length; i++){

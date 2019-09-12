@@ -4,6 +4,9 @@ const mongoose = require('mongoose');
 const webShrinkerData = require("../models/webShrinkerModel") 
 const preCacheModel = require("../models/preCacheModel") 
 const shell = require('shelljs')
+// var request = require('request');
+// const fetch = require("node-fetch");
+const https = require("https");
 
 router.get('/', (req, res, next) => {
     console.log("working on get on /view")
@@ -54,10 +57,34 @@ router.get('/:id/:url', function (req, res) {
             const { stdout, stderr, code } = shell.exec('bash auth.sh '+url);
             targetURL = ((stdout.toString()).trim());
             preCacheURLtoMongoDB(url, targetURL)
-            res.status(200).json({"url": url, "targetURL": targetURL})
+            
+            body = webShrinkerRequest(targetURL)
+
+            setTimeout(() => {
+                res.status(200).json({"targetURL": targetURL, "response" : body})
+            }, 3000);
 
         } else {
-            res.status(200).json(docs);
+            let targetURL = (docs[0].targetURL)
+            let body = "";
+
+            https.get(targetURL, res => {
+                res.on("data", data => {
+                    body += data;
+                });
+                res.on("end", () => {
+                    body = JSON.parse(body);
+                    
+                    setTimeout(() => {
+                        console.log(body)
+                    }, 3000);
+
+                });
+            });
+            setTimeout(() => {
+                res.status(200).json({"targetURL": targetURL, "response" : body})
+            }, 3000);
+
         }
     })
     .catch(err => {
@@ -69,6 +96,19 @@ router.get('/:id/:url', function (req, res) {
 
 });
 
+
+function webShrinkerRequest(targetURL) {
+    request(targetURL, function(error, response, body) {
+        console.log("in")
+        console.log('error:', error);
+        console.log('statusCode:', response && response.statusCode); 
+        if(response && response.statusCode==200){
+            var data= JSON.parse(JSON.stringify(body));
+            // console.log(data);
+            return data;
+        }
+    });
+}
 
 function preCacheURLtoMongoDB(url, targetURL){
     const payload = new preCacheModel({
